@@ -1,4 +1,8 @@
-text_img_dataset
+text_img_dataset/data
+text_img_dataset/images
+text_img_dataset/fonts
+text_img_dataset/backgrounds
+text_img_dataset/results
 VOCdevkit
 output
 data
