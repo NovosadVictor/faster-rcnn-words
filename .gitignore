@@ -3,3 +3,4 @@ VOCdevkit
 output
 data
 tensorboard
+docker
