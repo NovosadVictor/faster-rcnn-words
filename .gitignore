@@ -8,3 +8,5 @@ output
 data
 tensorboard
 docker
+.idea
+__pycache__

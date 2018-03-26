@@ -1,0 +1,109 @@
+0
+1 18 8 88 30 Apple
+2 75 31 162 52 Microsoft
+3
+4 165 65 285 106 Google
+5
+6
+7 1 115 240 140 aeroexpress
+8 155 710 845 789 aeroexpress
+9 380 210 575 235 aeroexpress
+10 45 15 145 45 Apple
+11
+12 25 1 275 63 Google
+13 75 60 175 83 Google
+14
+15
+16 320 75 590 155 Apple
+17
+18 50 72 115 90 Apple
+19
+20 99 55 138 65 Apple
+21 65 95 150 117 Apple
+22
+23 160 157 580 273 Microsoft
+24
+25
+26 2 5 370 105 Google
+27 32 11 70 20 Microsoft 12 43 77 56 Microsoft 17 265 38 270 Microsoft
+28
+29 38 47 170 78 Microsoft
+30 115 84 220 105 Microsoft
+31 17 35 70 52 Apple
+32 148 400 1765 690 Microsoft
+33 80 65 210 98 Google
+34 28 23 235 75 Google
+35
+36
+37 60 40 153 59 Microsoft
+38 13 48 122 65 Microsoft
+39
+40 1 104 133 140 Google
+41
+42 
+43 115 19 225 40 Microsoft
+44 237 7 293 21 Microsoft 55 125 105 140 Microsoft
+45 330 360 1155 510 Microsoft
+46 25 135 240 160 aeroexpress
+47
+48 25 40 265 115 Google
+49 15 125 167 153 Microsoft
+50 250 35 375 60 Microsoft
+51 40 38 315 118 Google
+52 11 2 95 35 Apple
+53 
+54
+55
+56 12 29 30 34 Apple 119 74 157 85 Apple
+57 18 55 283 117 Google
+58 
+59
+60 70 10 155 33 Apple 123 55 163 67 Apple
+61 63 5 133 30 Apple
+62
+63 5 40 292 115 Google
+64 100 55 240 82 Microsoft
+65 85 55 152 70 aeroexpress
+66
+67 110 59 285 95 Microsoft
+68 250 195 550 275 aeroexpress
+69 105 33 175 45 Microsoft
+70 136 57 255 85 Google
+71 115 90 272 130 Apple
+72 135 78 345 136 Apple
+73
+74 70 93 196 107 aeroexpress
+75 
+76
+77
+78
+79
+80
+81
+82
+83
+84 210 9 280 30 Google 225 98 280 110 Microsoft
+85 1700 600 4800 1900 Microsoft
+86 
+87 45 90 246 123 Microsoft
+88 370 430 1860 710 Microsoft
+89 185 43 245 53 Microsoft 250 88 280 95 Microsoft
+90 190 112 260 120 aeroexpress
+91 70 50 215 80 Microsoft
+92 145 83 220 93 aeroexpress
+93 100 123 250 138 aeroexpress
+94 17 383 845 480 aeroexpress
+95 247 180 738 273 Microsoft
+96
+97 9 55 270 128 Google
+98
+99 65 55 300 120 Microsoft
+100
+101
+102
+103 130 119 193 130 Microsoft
+104 15 35 245 80 Microsoft
+105 140 27 353 68 Microsoft
+106 53 26 92 39 Apple
+107 
+108 1 1 318 90 Google
