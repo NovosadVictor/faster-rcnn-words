@@ -24,6 +24,9 @@ import time
 import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
 
+#my imports
+from tools.test import testing
+
 class SolverWrapper(object):
   """
     A wrapper class for the training process
@@ -312,6 +315,8 @@ class SolverWrapper(object):
         # Remove the old snapshots if there are too many
         if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
           self.remove_snapshot(np_paths, ss_paths)
+
+        curr_loss = testing(iter, val=True)  #!!!!!!!!!!!!!!!!!!!!!!!!
 
       iter += 1
 
