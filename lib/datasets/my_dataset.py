@@ -207,9 +207,9 @@ class my_dataset(imdb):
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0
-            gt_boxes = np.zeros((num_objs, 5), dtype=np.uint16)
-            gt_boxes[:, :4] = boxes
-            gt_boxes[:, 4] = gt_classes
+#            gt_boxes = np.zeros((num_objs, 5), dtype=np.uint16)
+#            gt_boxes[:, :4] = boxes
+#            gt_boxes[:, 4] = gt_classes
             seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)
 
         overlaps = scipy.sparse.csr_matrix(overlaps)

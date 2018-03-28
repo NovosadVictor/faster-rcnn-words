@@ -7,8 +7,7 @@ from __future__ import division
 from __future__ import print_function
 
 #my imports
-from os import listdir
-from os.path import isfile, join
+import xml.etree.ElementTree as ET
 
 import _init_paths
 from model.config import cfg
@@ -32,116 +31,6 @@ NETS = {'vgg16': ('vgg16_faster_rcnn_iter_{}.ckpt',)}
 DATASETS= {'my_dataset': ('my_dataset_train', )}
 
 
-def all_objects(im, scores, boxes, image_name, thresh=0.8, nms_tresh=0.3):
-    """All detected objects on photo(with threshold)"""
-
-    im = im[:, :, (2, 1, 0)]
-    fig, ax = plt.subplots(figsize=(12, 12))
-    ax.imshow(im, aspect='equal')
-    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, nms_tresh)
-        dets = dets[keep, :]
-
-        inds = np.where(dets[:, -1] >= thresh)[0]
-        if len(inds) == 0:
-            continue
-        for i in inds:
-            bbox = dets[i, :4]
-            score = dets[i, -1]
-
-            ax.add_patch(
-                plt.Rectangle((bbox[0], bbox[1]),
-                                bbox[2] - bbox[0],
-                                bbox[3] - bbox[1], fill=False,
-                                edgecolor='red', linewidth=3.5)
-            )
-            ax.text(bbox[0], bbox[1] - 2,
-                    '{:s} {:.3f}'.format(cls, score),
-                    bbox=dict(facecolor='blue', alpha=0.5),
-                    fontsize=14, color='white')
-
-  #         ax.set_title(('{} detections with '
-  #                        'p({} | box) >= {:.1f}').format(cls, cls,
-  #                                                        thresh),
-  #                       fontsize=14)
-    plt.axis('off')
-    plt.tight_layout()
-    plt.draw()
-    plt.savefig(image_name)
-
-
-def vis_detections(im, class_name, dets, thresh=0.5):
-    """Draw detected bounding boxes."""
-    inds = np.where(dets[:, -1] >= thresh)[0]
-    if len(inds) == 0:
-        return
-
-    im = im[:, :, (2, 1, 0)]
-    fig, ax = plt.subplots(figsize=(12, 12))
-    ax.imshow(im, aspect='equal')
-    for i in inds:
-        bbox = dets[i, :4]
-        score = dets[i, -1]
-
-        ax.add_patch(
-            plt.Rectangle((bbox[0], bbox[1]),
-                          bbox[2] - bbox[0],
-                          bbox[3] - bbox[1], fill=False,
-                          edgecolor='red', linewidth=3.5)
-            )
-        ax.text(bbox[0], bbox[1] - 2,
-                '{:s} {:.3f}'.format(class_name, score),
-                bbox=dict(facecolor='blue', alpha=0.5),
-                fontsize=14, color='white')
-
-    ax.set_title(('{} detections with '
-                  'p({} | box) >= {:.1f}').format(class_name, class_name,
-                                                  thresh),
-                  fontsize=14)
-    plt.axis('off')
-    plt.tight_layout()
-    plt.draw()
-    plt.show()
-
-def demo(sess, net, image_name):
-    """Detect object classes in an image using pre-computed object proposals."""
-
-    # Load the demo image
-#    im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'fake_imgs', image_name)
-    im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'real_imgs', image_name)
-#    im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images', image_name)
-    print(im_file)
-    im = cv2.imread(im_file)
-
-    # Detect all object classes and regress object bounds
-    timer = Timer()
-    timer.tic()
-    scores, boxes = im_detect(sess, net, im)
-    timer.toc()
-    print('Detection took {:.3f}s for {:d} object proposals'.format(timer.total_time, boxes.shape[0]))
-
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
-    # My code
-    all_objects(im, scores, boxes, image_name, thresh=CONF_THRESH, nms_tresh=NMS_THRESH)
-
-    # Visualize detections for each class
-"""    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
-"""
-
 def parse_args():
     """ Parse input arguments. """
     parser = argparse.ArgumentParser(description='Tensorflow Faster R-CNN demo')
@@ -152,6 +41,86 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
+
+def load_annotations(xml_name):
+    with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Annotations', xml_name), 'r') as f:
+        tree = ET.parse(f)
+        objs = tree.findall('object')
+        num_objs = len(objs)
+
+        boxes = np.zeros((num_objs, 4), dtype=np.uint16)
+        gt_classes = np.zeros(num_objs, dtype=np.int32)
+        gt_boxes = np.zeros((num_objs, 5), dtype=np.uint16)
+
+        # Load object bounding boxes into a data frame.
+        for ix, obj in enumerate(objs):
+            bbox = obj.find('bndbox')
+            # Make pixel indexes 0-based
+            x1 = float(bbox.find('xmin').text) - 1
+            y1 = float(bbox.find('ymin').text) - 1
+            x2 = float(bbox.find('xmax').text) - 1
+            y2 = float(bbox.find('ymax').text) - 1
+            cls = CLASSES.index(obj.find('name').text.lower())
+            boxes[ix, :] = [x1, y1, x2, y2]
+            gt_classes[ix] = cls
+            gt_boxes[ix, :4] = boxes
+            gt_boxes[ix, 4] = gt_classes
+
+        return gt_boxes
+
+
+def is_there_intersection(bbox, box):
+    pass
+
+
+def loss_objects(im, scores, boxes, image_name, thresh=0.8, nms_tresh=0.3):
+    """All detected objects on photo(with threshold)"""
+
+    gt_boxes = load_annotations(xml_name=image_name[:-3] + '.xml')
+
+    curr_loss = [0, 0]
+
+    for cls_ind, cls in enumerate(CLASSES[1:]):
+        cls_ind += 1 # because we skipped background
+        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores = scores[:, cls_ind]
+
+        gt_boxes_class = gt_boxes[np.where(gt_boxes[:, 4] == cls_ind)]
+
+        dets = np.hstack((cls_boxes,
+                          cls_scores[:, np.newaxis])).astype(np.float32)
+        keep = nms(dets, nms_tresh)
+        dets = dets[keep, :]
+
+        inds = np.where(dets[:, -1] >= thresh)[0]
+        if len(inds) == 0:
+            continue
+        for i in inds:
+            bbox = dets[i, :4]
+            for box in gt_boxes_class:
+                if not is_there_intersection(bbox, box):
+                    curr_loss[0] += 1
+
+        curr_loss[1] += len(gt_boxes_class)
+
+    return curr_loss
+
+
+def test(sess, net, image_name):
+    """Detect object classes in an image using pre-computed object proposals."""
+
+    im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images', image_name)
+    im = cv2.imread(im_file)
+
+    # Detect all object classes and regress object bounds
+    scores, boxes = im_detect(sess, net, im)
+
+    CONF_THRESH = 0.8 # need to be changed
+    NMS_THRESH = 0.3
+
+    return loss_objects(im, scores, boxes, image_name, thresh=CONF_THRESH, nms_tresh=NMS_THRESH)
+
 
 def testing(iter, val=False):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
@@ -187,29 +156,24 @@ def testing(iter, val=False):
     saver.restore(sess, tfmodel)
 
     print('Loaded network {:s}'.format(tfmodel))
-    with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'ImageSets', 'test.txt'), 'r') as f:
-        test_images = f.readlines()
-    test_images = [x.strip() for x in test_images]
-    test_images = test_images[0::5]
-    test_images.append('00000')
-#    test_images = [f for f in listdir(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'real_imgs'))]
-#    fake_images = [f for f in listdir(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'fake_imgs'))]
-    print(len(test_images))
-#    print(len(fake_images))
 
+    loss = np.array([0, 0])
+
+    if val:
+        end = 'val'
+    else:
+        end = 'test'
+
+    with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'ImageSets', '{}.txt'.format(end)), 'r') as f:
+        test_images = f.readlines()
+        print(len(test_images))
 
     for ind, im_name in enumerate(test_images):
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        print('Demo for text_img_dataset/data/Images/{}'.format(im_name))
-#        print('Demo for text_img_dataset/data/real_imgs/{}'.format(im_name))
-#        demo(sess, net, im_name)
-        demo(sess, net, im_name + '.jpg')
-        print(len(test_images) - ind - 1, ' images left')
-#    for ind, im_name in enumerate(fake_images):
-#        print('Demo for text_img_dataset/data/fake_imgs/{}'.format(im_name))
-#        demo(sess, net, im_name)
-#        print(len(fake_images) - ind - 1, ' images left')
-#    plt.show()
+        loss += test(sess, net, im_name + '.jpg')
+        if ind % 20 == 0:
+            print(len(test_images) - ind - 1, ' images left')
+
+    return loss
 
 
 if __name__ == '__main__':
