@@ -267,6 +267,8 @@ class SolverWrapper(object):
     stepsizes.append(max_iters)
     stepsizes.reverse()
     next_stepsize = stepsizes.pop()
+    prev_loss = [0, 0]
+
     while iter < max_iters + 1:
       # Learning rate
       if iter == next_stepsize + 1:
@@ -297,9 +299,11 @@ class SolverWrapper(object):
           self.net.train_step(sess, blobs, train_op)
       timer.toc()
 
-      cfg.TRAIN.DISPLAY = 10 # 20
+      cfg.TRAIN.DISPLAY = 10  # 20
+
       # Display training information
-      if iter % (cfg.TRAIN.DISPLAY) == 0:
+
+      if iter % cfg.TRAIN.DISPLAY == 0:
         print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
               '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n' % \
               (iter, max_iters, total_loss, rpn_loss_cls, rpn_loss_box, loss_cls, loss_box))
@@ -316,12 +320,20 @@ class SolverWrapper(object):
         if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
           self.remove_snapshot(np_paths, ss_paths)
 
-        curr_loss = testing(iter, val=True)  #!!!!!!!!!!!!!!!!!!!!!!!!
+        curr_loss = testing(iter, end='val')  #!!!!!!!!!!!!!!!!!!!!!!!!
+
+        if abs(sum(curr_loss - prev_loss)) < 1e-3:
+          break
+
+        prev_loss = curr_loss
 
       iter += 1
 
     if last_snapshot_iter != iter - 1:
       self.snapshot(sess, iter - 1)
+
+    print(testing(iter))
+
 
     self.writer.close()
     self.valwriter.close()

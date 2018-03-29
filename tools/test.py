@@ -43,6 +43,33 @@ def parse_args():
     return args
 
 
+def bb_intersection_over_union(boxA, boxB):
+    # determine the (x, y)-coordinates of the intersection rectangle
+
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+
+    if (xB - xA) <= 0 or (yB - yA) <= 0:
+        return 0
+    # compute the area of intersection rectangle
+    interArea = (xB - xA + 1) * (yB - yA + 1)
+
+    # compute the area of both the prediction and ground-truth
+    # rectangles
+    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+
+    # return the intersection over union value
+    return iou
+
+
 def load_annotations(xml_name):
     with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Annotations', xml_name), 'r') as f:
         tree = ET.parse(f)
@@ -98,10 +125,12 @@ def loss_objects(im, scores, boxes, image_name, thresh=0.8, nms_tresh=0.3):
             continue
         for i in inds:
             bbox = dets[i, :4]
-            for box in gt_boxes_class:
-                if not is_there_intersection(bbox, box):
-                    curr_loss[0] += 1
+            for j in range(len(gt_boxes_class)):
+                if bb_intersection_over_union(bbox, gt_boxes_class[j]) > 0.5:
+                    del dets[i, :4]
+                    del gt_boxes_class[j]
 
+        curr_loss[0] += len(dets)
         curr_loss[1] += len(gt_boxes_class)
 
     return curr_loss
@@ -116,13 +145,13 @@ def test(sess, net, image_name):
     # Detect all object classes and regress object bounds
     scores, boxes = im_detect(sess, net, im)
 
-    CONF_THRESH = 0.8 # need to be changed
+    CONF_THRESH = 0.8  # need to be changed
     NMS_THRESH = 0.3
 
     return loss_objects(im, scores, boxes, image_name, thresh=CONF_THRESH, nms_tresh=NMS_THRESH)
 
 
-def testing(iter, val=False):
+def testing(iter, end='test'):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
     args = parse_args()
 
@@ -159,11 +188,6 @@ def testing(iter, val=False):
 
     loss = np.array([0, 0])
 
-    if val:
-        end = 'val'
-    else:
-        end = 'test'
-
     with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'ImageSets', '{}.txt'.format(end)), 'r') as f:
         test_images = f.readlines()
         print(len(test_images))
@@ -173,7 +197,7 @@ def testing(iter, val=False):
         if ind % 20 == 0:
             print(len(test_images) - ind - 1, ' images left')
 
-    return loss
+    return loss / len(test_images)
 
 
 if __name__ == '__main__':
