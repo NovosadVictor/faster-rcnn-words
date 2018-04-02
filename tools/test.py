@@ -1,12 +1,11 @@
-""" Made by me(V.N) """
-""" Test images """
-
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+""" Test images """
+
 #my imports
+import sys
 import xml.etree.ElementTree as ET
 
 import _init_paths
@@ -16,7 +15,6 @@ from model.nms_wrapper import nms
 
 from utils.timer import Timer
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import numpy as np
 import os, cv2
 import argparse
@@ -29,18 +27,6 @@ CLASSES = ('__background__',
 
 NETS = {'vgg16': ('vgg16_faster_rcnn_iter_{}.ckpt',)}
 DATASETS= {'my_dataset': ('my_dataset_train', )}
-
-
-def parse_args():
-    """ Parse input arguments. """
-    parser = argparse.ArgumentParser(description='Tensorflow Faster R-CNN demo')
-    parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16 res101]',
-                        choices=NETS.keys(), default='vgg16')
-    parser.add_argument('--dataset', dest='dataset', help='Trained dataset [my_dataset]',
-                        choices=DATASETS.keys(), default='my_dataset')
-    args = parser.parse_args()
-
-    return args
 
 
 def bb_intersection_over_union(boxA, boxB):
@@ -97,10 +83,6 @@ def load_annotations(xml_name):
         return gt_boxes
 
 
-def is_there_intersection(bbox, box):
-    pass
-
-
 def loss_objects(im, scores, boxes, image_name, thresh=0.8, nms_tresh=0.3):
     """All detected objects on photo(with threshold)"""
 
@@ -153,13 +135,13 @@ def test(sess, net, image_name):
 
 def testing(iter, end='test'):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
-    args = parse_args()
 
     # model path
-    demonet = args.demo_net
-    dataset = args.dataset
+    demonet = 'vgg16'
+    dataset = 'my_dataset'
     tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default',
                               NETS[demonet][0].format(iter))
+    print(tfmodel)
 
 
     if not os.path.isfile(tfmodel + '.meta'):
@@ -175,12 +157,10 @@ def testing(iter, end='test'):
     # load network
     if demonet == 'vgg16':
         net = vgg16()
-#    elif demonet == 'res101':
-#        net = resnetv1(num_layers=101)
     else:
         raise NotImplementedError
     net.create_architecture("TEST", len(CLASSES),
-                          tag='default', anchor_scales=[32, 48, 64, 80], anchor_ratios=[0.2, 0.5, 0.8, 1, 1.2, 1.5])
+                           tag='default', anchor_scales=[4, 8, 16, 32], anchor_ratios=[0.15, 0.3, 0.5, 0.7])
     saver = tf.train.Saver()
     saver.restore(sess, tfmodel)
 
@@ -193,7 +173,8 @@ def testing(iter, end='test'):
         print(len(test_images))
 
     for ind, im_name in enumerate(test_images):
-        loss += test(sess, net, im_name + '.jpg')
+	print(im_name[:-1] + '.jpg')
+        loss += test(sess, net, im_name[:-1] + '.jpg')
         if ind % 20 == 0:
             print(len(test_images) - ind - 1, ' images left')
 
@@ -201,4 +182,4 @@ def testing(iter, end='test'):
 
 
 if __name__ == '__main__':
-    pass
+    print(testing(sys.argv[1], end='real'))
