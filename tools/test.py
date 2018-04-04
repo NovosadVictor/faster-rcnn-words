@@ -187,4 +187,4 @@ if __name__ == '__main__':
     with open(os.path.join(cfg.ROOT_DIR, 'real_results', 'real_results.txt'), 'w') as f_o:
         for thresh in threshs:
             error = test.testing(end='real', thresh=thresh)
-            f_o.write(str(error[0]) + ' ' + str(error[1]) + str(thresh) + '\n')
+            f_o.write(str(error[0]) + ' ' + str(error[1]) + ' ' + str(thresh) + '\n')
