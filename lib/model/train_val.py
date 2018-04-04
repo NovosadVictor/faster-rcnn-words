@@ -271,70 +271,85 @@ class SolverWrapper(object):
     next_stepsize = stepsizes.pop()
     prev_loss = [0, 0]
 
-    while iter < max_iters + 1:
-      # Learning rate
-      if iter == next_stepsize + 1:
-        # Add snapshot here before reducing the learning rate
-        self.snapshot(sess, iter)
-        rate *= cfg.TRAIN.GAMMA
-        sess.run(tf.assign(lr, rate))
-        next_stepsize = stepsizes.pop()
+    with open(os.path.join(self.output_dir, 'val_errors.txt'), 'w') as val_f:
+      while iter < max_iters + 1:
+        # Learning rate
+        if iter == next_stepsize + 1:
+          # Add snapshot here before reducing the learning rate
+          self.snapshot(sess, iter)
+          rate *= cfg.TRAIN.GAMMA
+          sess.run(tf.assign(lr, rate))
+          next_stepsize = stepsizes.pop()
 
-      timer.tic()
-      # Get training data, one batch at a time
-      blobs = self.data_layer.forward()
+        timer.tic()
+        # Get training data, one batch at a time
+        blobs = self.data_layer.forward()
 
-      now = time.time()
-      if iter == 1 or now - last_summary_time > cfg.TRAIN.SUMMARY_INTERVAL:
-        # Compute the graph with summary
-        rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss, summary = \
-          self.net.train_step_with_summary(sess, blobs, train_op)
-        self.writer.add_summary(summary, float(iter))
-        # Also check the summary on the validation set
-        blobs_val = self.data_layer_val.forward()
-        summary_val = self.net.get_summary(sess, blobs_val)
-        self.valwriter.add_summary(summary_val, float(iter))
-        last_summary_time = now
-      else:
-        # Compute the graph without summary
-        rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = \
-          self.net.train_step(sess, blobs, train_op)
-      timer.toc()
+        now = time.time()
+        if iter == 1 or now - last_summary_time > cfg.TRAIN.SUMMARY_INTERVAL:
+          # Compute the graph with summary
+          rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss, summary = \
+            self.net.train_step_with_summary(sess, blobs, train_op)
+          self.writer.add_summary(summary, float(iter))
+          # Also check the summary on the validation set
+          blobs_val = self.data_layer_val.forward()
+          summary_val = self.net.get_summary(sess, blobs_val)
+          self.valwriter.add_summary(summary_val, float(iter))
+          last_summary_time = now
+        else:
+          # Compute the graph without summary
+          rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = \
+            self.net.train_step(sess, blobs, train_op)
+        timer.toc()
 
-      cfg.TRAIN.DISPLAY = 10  # 20
+        cfg.TRAIN.DISPLAY = 10  # 20
 
-      # Display training information
+        # Display training information
 
-      if iter % cfg.TRAIN.DISPLAY == 0:
-        print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
-              '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n' % \
-              (iter, max_iters, total_loss, rpn_loss_cls, rpn_loss_box, loss_cls, loss_box))
-        print('speed: {:.3f}s / iter'.format(timer.average_time))
+        if iter % cfg.TRAIN.DISPLAY == 0:
+          print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
+                '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n' % \
+                (iter, max_iters, total_loss, rpn_loss_cls, rpn_loss_box, loss_cls, loss_box))
+          print('speed: {:.3f}s / iter'.format(timer.average_time))
 
-      # Snapshotting
-      if iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
-        last_snapshot_iter = iter
-        ss_path, np_path = self.snapshot(sess, iter)
-        np_paths.append(np_path)
-        ss_paths.append(ss_path)
+        # Snapshotting
+        if iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
+          last_snapshot_iter = iter
+          ss_path, np_path = self.snapshot(sess, iter)
+          np_paths.append(np_path)
+          ss_paths.append(ss_path)
 
-        # Remove the old snapshots if there are too many
-        if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
-          self.remove_snapshot(np_paths, ss_paths)
+          # Remove the old snapshots if there are too many
+          if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
+            self.remove_snapshot(np_paths, ss_paths)
 
-        curr_loss = testing(iter, end='val')  # !!!!!!!!!!!!!!!!!!!!!!!!
+          val_f.write(str(iter) + '\n')
 
-        if abs(sum(curr_loss - prev_loss)) < 2 * 1e-3:
-          break
+          val = 0.7
+          while val < 0.9:
+            curr_loss = testing(iter, end='val', thresh=val)  # !!!!!!!!!!!!!!!!!!!!!!!!
+            val_f.write(str(curr_loss[0]) + ' ' + str(curr_loss[1]) + ' ' + str(val) + '\n')
+            val += 0.02
 
-        prev_loss = curr_loss
+          if abs(sum(curr_loss - prev_loss)) < 2 * 1e-3:
+            break
 
-      iter += 1
+          prev_loss = curr_loss
+
+        iter += 1
 
     if last_snapshot_iter != iter - 1:
       self.snapshot(sess, iter - 1)
 
-    print(testing(iter - 1))
+    with open(os.path.join(self.output_dir, 'test_error.txt'), 'w') as test_f:
+      test = 0.7
+      test_f.write(str(iter - 1) + '\n')
+      while test < 0.94:
+        test_error = testing(iter - 1, thresh=test)  # !!!!!!!!!!!!!!!!!!!!!!!!
+        test_f.write(str(test_error[0]) + ' ' + str(test_error[1]) + ' ' + str(test) + '\n')
+        test += 0.02
+
+      print(test_error)
 
     self.writer.close()
     self.valwriter.close()

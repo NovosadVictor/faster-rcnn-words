@@ -81,7 +81,7 @@ def load_annotations(xml_name):
         return gt_boxes
 
 
-def loss_objects(im, scores, boxes, image_name, thresh=0.9, nms_tresh=0.3):
+def loss_objects(im, scores, boxes, image_name, thresh, nms_tresh=0.3):
     """All detected objects on photo(with threshold)"""
 
     print('\nimg name: ', image_name)
@@ -122,7 +122,7 @@ def loss_objects(im, scores, boxes, image_name, thresh=0.9, nms_tresh=0.3):
     return curr_loss
 
 
-def test(sess, net, image_name):
+def test(sess, net, image_name, thresh):
     """Detect object classes in an image using pre-computed object proposals."""
 
     im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images', image_name)
@@ -131,13 +131,12 @@ def test(sess, net, image_name):
     # Detect all object classes and regress object bounds
     scores, boxes = im_detect(sess, net, im)
 
-    CONF_THRESH = 0.9  # need to be changed
     NMS_THRESH = 0.3
 
-    return loss_objects(im, scores, boxes, image_name, thresh=CONF_THRESH, nms_tresh=NMS_THRESH)
+    return loss_objects(im, scores, boxes, image_name, thresh=thresh, nms_tresh=NMS_THRESH)
 
 
-def testing(iter, end='test'):
+def testing(iter, end='test', thresh=0.9):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     # model path
@@ -178,13 +177,14 @@ def testing(iter, end='test'):
 
     for ind, im_name in enumerate(test_images):
 #	print(im_name[:-1] + '.jpg')
-        loss += test(sess, net, im_name[:-1] + '.jpg')
+        loss += test(sess, net, im_name[:-1] + '.jpg', thresh=thresh)
         if ind % 20 == 0:
-	    print('curr loss: ', loss)
+            print('curr loss: ', loss)
             print(len(test_images) - ind - 1, ' images left')
 
     return loss / len(test_images)
 
 
 if __name__ == '__main__':
-    print(testing(sys.argv[1], end='real'))
+    thresh = sys.argv[2] if len(sys.argv) == 3 else 0.9
+    print(testing(sys.argv[1], end='real', thresh=thresh))
