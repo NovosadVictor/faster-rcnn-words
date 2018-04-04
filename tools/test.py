@@ -84,7 +84,7 @@ def load_annotations(xml_name):
 def loss_objects(im, scores, boxes, image_name, thresh, nms_tresh=0.3):
     """All detected objects on photo(with threshold)"""
 
-    print('\nimg name: ', image_name)
+#    print('\nimg name: ', image_name)
     gt_boxes = load_annotations(xml_name=image_name[:-3] + 'xml')
 
     curr_loss = [0, 0]
@@ -110,7 +110,7 @@ def loss_objects(im, scores, boxes, image_name, thresh, nms_tresh=0.3):
             for gt_bbox in gt_boxes_class:
 		iou = bb_intersection_over_union(bbox, gt_bbox)
 #		print(bbox, '\n\n', gt_bbox, '\n\t iou = ', iou)
-		print(iou)
+#		print(iou)
                 if iou > 0.4:
                     dets = np.delete(dets, np.where(dets == bbox), 0)
                     gt_boxes_class = np.delete(gt_boxes_class, np.where(gt_boxes_class == gt_bbox), 0)
@@ -137,6 +137,7 @@ def test(sess, net, image_name, thresh):
 
 
 def testing(iter, end='test', thresh=0.9):
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     # model path
@@ -186,5 +187,12 @@ def testing(iter, end='test', thresh=0.9):
 
 
 if __name__ == '__main__':
-    thresh = sys.argv[2] if len(sys.argv) == 3 else 0.9
-    print(testing(sys.argv[1], end='real', thresh=thresh))
+    if sys.argv[2] == 'all':
+	threshs = [0.7 + 0.02 * i for i in range(12)]
+    else:
+    	threshs = float(sys.argv[2])
+    
+    with open(os.path.join(cfg.ROOT_DIR, 'real_results', 'real_results.txt'), 'w') as f_o:
+	for thresh in threshs:
+    	    error = testing(sys.argv[1], end='real', thresh=thresh)
+    	    f_o.write(str(error[0]) + ' ' + str(error[1]) + str(thresh) + '\n')
