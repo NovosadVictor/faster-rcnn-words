@@ -62,8 +62,6 @@ def load_annotations(xml_name):
         objs = tree.findall('object')
         num_objs = len(objs)
 
-        boxes = np.zeros((num_objs, 4), dtype=np.uint16)
-        gt_classes = np.zeros(num_objs, dtype=np.int32)
         gt_boxes = np.zeros((num_objs, 5), dtype=np.uint16)
 
         # Load object bounding boxes into a data frame.
@@ -74,19 +72,20 @@ def load_annotations(xml_name):
             y1 = float(bbox.find('ymin').text) - 1
             x2 = float(bbox.find('xmax').text) - 1
             y2 = float(bbox.find('ymax').text) - 1
+
             cls = CLASSES.index(obj.find('name').text.lower())
-            boxes[ix, :] = [x1, y1, x2, y2]
-            gt_classes[ix] = cls
-            gt_boxes[ix, :4] = boxes
-            gt_boxes[ix, 4] = gt_classes
+
+            gt_boxes[ix, :4] = [x1, y1, x2, y2]
+            gt_boxes[ix, 4] = cls
 
         return gt_boxes
 
 
-def loss_objects(im, scores, boxes, image_name, thresh=0.8, nms_tresh=0.3):
+def loss_objects(im, scores, boxes, image_name, thresh=0.9, nms_tresh=0.3):
     """All detected objects on photo(with threshold)"""
 
-    gt_boxes = load_annotations(xml_name=image_name[:-3] + '.xml')
+    print('\nimg name: ', image_name)
+    gt_boxes = load_annotations(xml_name=image_name[:-3] + 'xml')
 
     curr_loss = [0, 0]
 
@@ -103,17 +102,22 @@ def loss_objects(im, scores, boxes, image_name, thresh=0.8, nms_tresh=0.3):
         dets = dets[keep, :]
 
         inds = np.where(dets[:, -1] >= thresh)[0]
-        if len(inds) == 0:
-            continue
-        for i in inds:
-            bbox = dets[i, :4]
-            for j in range(len(gt_boxes_class)):
-                if bb_intersection_over_union(bbox, gt_boxes_class[j]) > 0.5:
-                    del dets[i, :4]
-                    del gt_boxes_class[j]
+	dets = dets[inds]
+	
+#	print('class = ', cls, '\ngt boxes\n', gt_boxes_class, '\ndets boxes\n', dets)
+
+        for bbox in dets:
+            for gt_bbox in gt_boxes_class:
+		iou = bb_intersection_over_union(bbox, gt_bbox)
+#		print(bbox, '\n\n', gt_bbox, '\n\t iou = ', iou)
+		print(iou)
+                if iou > 0.4:
+                    dets = np.delete(dets, np.where(dets == bbox), 0)
+                    gt_boxes_class = np.delete(gt_boxes_class, np.where(gt_boxes_class == gt_bbox), 0)
 
         curr_loss[0] += len(dets)
         curr_loss[1] += len(gt_boxes_class)
+#	print('class = ', cls, '\ndets\n', dets, '\n\ngts\n', gt_boxes_class)
 
     return curr_loss
 
@@ -127,7 +131,7 @@ def test(sess, net, image_name):
     # Detect all object classes and regress object bounds
     scores, boxes = im_detect(sess, net, im)
 
-    CONF_THRESH = 0.8  # need to be changed
+    CONF_THRESH = 0.9  # need to be changed
     NMS_THRESH = 0.3
 
     return loss_objects(im, scores, boxes, image_name, thresh=CONF_THRESH, nms_tresh=NMS_THRESH)
@@ -173,9 +177,10 @@ def testing(iter, end='test'):
         print(len(test_images))
 
     for ind, im_name in enumerate(test_images):
-	print(im_name[:-1] + '.jpg')
+#	print(im_name[:-1] + '.jpg')
         loss += test(sess, net, im_name[:-1] + '.jpg')
         if ind % 20 == 0:
+	    print('curr loss: ', loss)
             print(len(test_images) - ind - 1, ' images left')
 
     return loss / len(test_images)

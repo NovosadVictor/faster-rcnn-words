@@ -19,7 +19,7 @@ def create_xml():
             for i in range(len(boxes)):
                 for j in range(len(boxes[i]) - 1):
                     boxes[i][j] = float(boxes[i][j])
-            xml = XML(name='real_%d' % ind, size=(width, height))
+            xml = XML(name='%d' % ind, size=(width, height))
             for box in boxes:
                 xml.add_object(name=box[4], coordinates=(box[0], box[1], box[2], box[3]))
 
