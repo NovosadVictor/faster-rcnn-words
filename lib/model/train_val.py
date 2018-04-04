@@ -26,7 +26,7 @@ from tensorflow.python import pywrap_tensorflow
 
 #my imports
 import init_path
-from tools.test import testing
+from tools.test import TEST
 
 
 class SolverWrapper(object):
@@ -323,11 +323,13 @@ class SolverWrapper(object):
           if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
             self.remove_snapshot(np_paths, ss_paths)
 
+          test = TEST(iter)
+
           val_f.write(str(iter) + '\n')
 
           val = 0.7
           while val < 0.9:
-            curr_loss = testing(iter, end='val', thresh=val)  # !!!!!!!!!!!!!!!!!!!!!!!!
+            curr_loss = test.testing(end='val', thresh=val)  # !!!!!!!!!!!!!!!!!!!!!!!!
             val_f.write(str(curr_loss[0]) + ' ' + str(curr_loss[1]) + ' ' + str(val) + '\n')
             val += 0.02
 
@@ -342,12 +344,14 @@ class SolverWrapper(object):
       self.snapshot(sess, iter - 1)
 
     with open(os.path.join(self.output_dir, 'test_error.txt'), 'w') as test_f:
-      test = 0.7
+      test = TEST(iter - 1)
+
+      test_tr = 0.7
       test_f.write(str(iter - 1) + '\n')
-      while test < 0.94:
-        test_error = testing(iter - 1, thresh=test)  # !!!!!!!!!!!!!!!!!!!!!!!!
-        test_f.write(str(test_error[0]) + ' ' + str(test_error[1]) + ' ' + str(test) + '\n')
-        test += 0.02
+      while test_tr < 0.94:
+        test_error = test.testing(thresh=test_tr)  # !!!!!!!!!!!!!!!!!!!!!!!!
+        test_f.write(str(test_error[0]) + ' ' + str(test_error[1]) + ' ' + str(test_tr) + '\n')
+        test_tr += 0.02
 
       print(test_error)
 
