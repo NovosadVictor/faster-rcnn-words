@@ -137,53 +137,53 @@ def test(sess, net, image_name, thresh):
 
 
 def testing(iter, end='test', thresh=0.9):
-    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
-    cfg.TEST.HAS_RPN = True  # Use RPN for proposals
+    with tf.variable_scope(reuse=tf.AUTO_REUSE):
+        cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-    # model path
-    demonet = 'vgg16'
-    dataset = 'my_dataset'
-    tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default',
-                              NETS[demonet][0].format(iter))
-    print(tfmodel)
+        # model path
+        demonet = 'vgg16'
+        dataset = 'my_dataset'
+        tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default',
+                                  NETS[demonet][0].format(iter))
+        print(tfmodel)
 
 
-    if not os.path.isfile(tfmodel + '.meta'):
-        raise IOError(('{:s} not found.\nDid you download the proper networks from '
-                       'our server and place them properly?').format(tfmodel + '.meta'))
+        if not os.path.isfile(tfmodel + '.meta'):
+            raise IOError(('{:s} not found.\nDid you download the proper networks from '
+                           'our server and place them properly?').format(tfmodel + '.meta'))
 
-    # set config
-    tfconfig = tf.ConfigProto(allow_soft_placement=True)
-    tfconfig.gpu_options.allow_growth=True
+        # set config
+        tfconfig = tf.ConfigProto(allow_soft_placement=True)
+        tfconfig.gpu_options.allow_growth=True
 
-    # init session
-    sess = tf.Session(config=tfconfig)
-    # load network
-    if demonet == 'vgg16':
-        net = vgg16()
-    else:
-        raise NotImplementedError
-    net.create_architecture("TEST", len(CLASSES),
-                           tag='default', anchor_scales=[4, 8, 16, 32], anchor_ratios=[0.15, 0.3, 0.5, 0.7])
-    saver = tf.train.Saver()
-    saver.restore(sess, tfmodel)
+        # init session
+        sess = tf.Session(config=tfconfig)
+        # load network
+        if demonet == 'vgg16':
+            net = vgg16()
+        else:
+            raise NotImplementedError
+        net.create_architecture("TEST", len(CLASSES),
+                               tag='default', anchor_scales=[4, 8, 16, 32], anchor_ratios=[0.15, 0.3, 0.5, 0.7])
+        saver = tf.train.Saver()
+        saver.restore(sess, tfmodel)
 
-    print('Loaded network {:s}'.format(tfmodel))
+        print('Loaded network {:s}'.format(tfmodel))
 
-    loss = np.array([0, 0])
+        loss = np.array([0, 0])
 
-    with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'ImageSets', '{}.txt'.format(end)), 'r') as f:
-        test_images = f.readlines()
-        print(len(test_images))
+        with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'ImageSets', '{}.txt'.format(end)), 'r') as f:
+            test_images = f.readlines()
+            print(len(test_images))
 
-    for ind, im_name in enumerate(test_images):
-#	print(im_name[:-1] + '.jpg')
-        loss += test(sess, net, im_name[:-1] + '.jpg', thresh=thresh)
-        if ind % 20 == 0:
-            print('curr loss: ', loss)
-            print(len(test_images) - ind - 1, ' images left')
+        for ind, im_name in enumerate(test_images):
+    #	print(im_name[:-1] + '.jpg')
+            loss += test(sess, net, im_name[:-1] + '.jpg', thresh=thresh)
+            if ind % 20 == 0:
+                print('curr loss: ', loss)
+                print(len(test_images) - ind - 1, ' images left')
 
-    return loss / len(test_images)
+        return loss / len(test_images)
 
 
 if __name__ == '__main__':
