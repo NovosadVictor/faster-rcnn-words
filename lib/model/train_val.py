@@ -28,6 +28,7 @@ from tensorflow.python import pywrap_tensorflow
 import init_path
 from tools.test import testing
 
+
 class SolverWrapper(object):
   """
     A wrapper class for the training process
@@ -321,20 +322,19 @@ class SolverWrapper(object):
         if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
           self.remove_snapshot(np_paths, ss_paths)
 
-#        curr_loss = testing(iter, end='val')  #!!!!!!!!!!!!!!!!!!!!!!!!
+        curr_loss = testing(iter, end='val')  # !!!!!!!!!!!!!!!!!!!!!!!!
 
-#        if abs(sum(curr_loss - prev_loss)) < 1e-3:
-#          break
+        if abs(sum(curr_loss - prev_loss)) < 2 * 1e-3:
+          break
 
-#        prev_loss = curr_loss
+        prev_loss = curr_loss
 
       iter += 1
 
     if last_snapshot_iter != iter - 1:
       self.snapshot(sess, iter - 1)
 
-#    print(testing(iter))
-
+    print(testing(iter - 1))
 
     self.writer.close()
     self.valwriter.close()
