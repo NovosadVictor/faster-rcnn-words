@@ -42,10 +42,10 @@ case ${DATASET} in
   my_dataset)
     TRAIN_IMDB="my_dataset_train"
     TEST_IMDB="my_dataset_test"
-    STEPSIZE="[4000]"
-    ITERS=40000
-    ANCHORS="[4,8,16,32]"
-    RATIOS="[0.15,0.3,0.5,0.7]"
+    STEPSIZE="[3000]"
+    ITERS=30000
+    ANCHORS="[8,16,32]"
+    RATIOS="[0.5,1,2]"
     ;;
   *)
     echo "No dataset given"

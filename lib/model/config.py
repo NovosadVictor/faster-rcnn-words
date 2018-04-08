@@ -53,7 +53,7 @@ __C.TRAIN.USE_GT = False
 __C.TRAIN.ASPECT_GROUPING = False
 
 # The number of snapshots kept, older ones are deleted to save space
-__C.TRAIN.SNAPSHOT_KEPT = 7
+__C.TRAIN.SNAPSHOT_KEPT = 10
 
 # The time interval for saving tensorflow summaries
 __C.TRAIN.SUMMARY_INTERVAL = 500
@@ -83,7 +83,7 @@ __C.TRAIN.BG_THRESH_HI = 0.5
 __C.TRAIN.BG_THRESH_LO = 0.1
 
 # Use horizontally-flipped images during training?
-__C.TRAIN.USE_FLIPPED = False
+__C.TRAIN.USE_FLIPPED = True
 
 # Train bounding-box regressors
 __C.TRAIN.BBOX_REG = True
@@ -93,7 +93,7 @@ __C.TRAIN.BBOX_REG = True
 __C.TRAIN.BBOX_THRESH = 0.5
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+__C.TRAIN.SNAPSHOT_ITERS = 500
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
@@ -169,7 +169,7 @@ __C.TEST = edict()
 __C.TEST.SCALES = (600,)
 
 # Max pixel size of the longest side of a scaled input image
-__C.TEST.MAX_SIZE = 1000
+__C.TEST.MAX_SIZE = 1200
 
 # Overlap threshold used for non-maximum suppression (suppress boxes with
 # IoU >= this threshold)
@@ -278,10 +278,10 @@ __C.POOLING_MODE = 'crop'
 __C.POOLING_SIZE = 7
 
 # Anchor scales for RPN
-__C.ANCHOR_SCALES = [4, 8, 16, 32]
+__C.ANCHOR_SCALES = [8, 16, 32] # 4 8 16 32
 # ORIGINAL IS [16, 32, 48]
 # Anchor ratios for RPN
-__C.ANCHOR_RATIOS = [0.15, 0.3, 0.5, 0.7]
+__C.ANCHOR_RATIOS = [0.5, 1, 2] # 0.15 0.3 0.5 0.7
 
 # Number of filters for the RPN layer
 __C.RPN_CHANNELS = 512
