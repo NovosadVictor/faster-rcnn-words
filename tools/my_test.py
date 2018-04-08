@@ -29,13 +29,13 @@ NETS = {'vgg16': ('vgg16_faster_rcnn_iter_{}.ckpt',)}
 DATASETS= {'my_dataset': ('my_dataset_train', )}
 
 class TEST:
-    def __init__(self, iter, sess=None):
+    def __init__(self, iter, sess=None, net=None):
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
         # model path
-        demonet = 'vgg16'
-        dataset = 'my_dataset'
-	if sess is None:
+        if sess is None or net is None:
+            demonet = 'vgg16'
+            dataset = 'my_dataset'
             tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default',
                                    NETS[demonet][0].format(iter))
             print(tfmodel)
@@ -48,20 +48,22 @@ class TEST:
             tfconfig.gpu_options.allow_growth = True
 
         # init session
-        self._sess = tf.Session(config=tfconfig) if sess is None else sess
-        # load network
-        if demonet == 'vgg16':
-            self._net = vgg16()
-        else:
-            raise NotImplementedError
-        self._net.create_architecture("TEST", len(CLASSES),
-                                tag='default', anchor_scales=[8, 16, 32], anchor_ratios=[0.5, 1, 2])
-	
-	if sess is None:
+            self._sess = tf.Session(config=tfconfig) if sess is None else sess
+            # load network
+            if demonet == 'vgg16':
+                self._net = vgg16()
+            else:
+                raise NotImplementedError
+            self._net.create_architecture("TEST", len(CLASSES),
+                                    tag='default', anchor_scales=[8, 16, 32], anchor_ratios=[0.5, 1, 2])
+
             saver = tf.train.Saver()
             saver.restore(self._sess, tfmodel)
 
             print('Loaded network {:s}'.format(tfmodel))
+        else:
+            self._net = net
+            self._sess = sess
 
     def _bb_intersection_over_union(self, boxA, boxB):
         # determine the (x, y)-coordinates of the intersection rectangle
@@ -88,7 +90,6 @@ class TEST:
 
         # return the intersection over union value
         return iou
-
 
     def _load_annotations(self, xml_name):
         with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Annotations', xml_name), 'r') as f:
@@ -149,14 +150,14 @@ class TEST:
 
         return curr_loss
 
-    def _test(self, net, image_name, thresh):
+    def _test(self, image_name, thresh):
         """Detect object classes in an image using pre-computed object proposals."""
 
         im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images', image_name)
         im = cv2.imread(im_file)
 
         # Detect all object classes and regress object bounds
-        scores, boxes = im_detect(self._sess, net, im)
+        scores, boxes = im_detect(self._sess, self._net, im)
 
         NMS_THRESH = 0.3
 
@@ -171,7 +172,7 @@ class TEST:
                 print(len(test_images))
 
             for ind, im_name in enumerate(test_images):
-                loss += self._test(self._net, im_name[:-1] + '.jpg', thresh=thresh)
+                loss += self._test(im_name[:-1] + '.jpg', thresh=thresh)
                 if ind % 20 == 0:
                     print('curr loss: ', loss)
                     print(len(test_images) - ind - 1, ' images left')

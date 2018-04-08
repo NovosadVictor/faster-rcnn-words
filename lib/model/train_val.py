@@ -323,7 +323,7 @@ class SolverWrapper(object):
           if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
             self.remove_snapshot(np_paths, ss_paths)
 
-          test = TEST(iter, sess)
+          test = TEST(iter, sess, self.net)
 
           val_f.write(str(iter) + '\n')
 
@@ -345,7 +345,7 @@ class SolverWrapper(object):
       self.snapshot(sess, iter - 1)
 
     with open(os.path.join(self.output_dir, 'test_error_{}.txt'.format(iter - 1)), 'w') as test_f:
-      test = TEST(iter - 1, sess)
+      test = TEST(iter - 1, sess, self.net)
 
       test_tr = 0.7
       test_f.write(str(iter - 1) + '\n')
