@@ -24,7 +24,7 @@ class vgg16(Network):
     self._scope = 'vgg_16'
 
   def _image_to_head(self, is_training, reuse=None):
-    with tf.variable_scope(self._scope, self._scope, reuse=reuse):
+    with tf.variable_scope(self._scope, self._scope, reuse=True):
       net = slim.repeat(self._image, 2, slim.conv2d, 64, [3, 3],
                           trainable=False, scope='conv1')
       net = slim.max_pool2d(net, [2, 2], padding='SAME', scope='pool1')

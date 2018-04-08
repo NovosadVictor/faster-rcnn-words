@@ -29,7 +29,7 @@ NETS = {'vgg16': ('vgg16_faster_rcnn_iter_{}.ckpt',)}
 DATASETS= {'my_dataset': ('my_dataset_train', )}
 
 class TEST:
-    def __init__(self, iter):
+    def __init__(self, iter, sess=None):
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
         # model path
@@ -86,7 +86,6 @@ class TEST:
 
         # return the intersection over union value
         return iou
-
 
     def _load_annotations(self, xml_name):
         with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Annotations', xml_name), 'r') as f:
