@@ -12,6 +12,7 @@ FONTS_PATH = 'fonts/'
 SAVE_PATH = 'data/Images/'
 TRAIN_PATH = 'data/ImageSets/'
 TEST_PATH = 'data/ImageSets/'
+VAL_PATH = 'data/ImageSets/'
 FAKE_WORDS_PATH = './fakewords.txt'
 MAX_ITERATIONS = 10000
 
@@ -179,9 +180,10 @@ def create_dataset(iterations, disp_step=1, last_saved=0):
     print('Done')
 
 
-def set_train_test(iterations, test_part=0.1):
+def set_train_test(iterations, test_part=0.2, val_part=0.1):
     test_images = random.sample([i for i in range(iterations)], int(test_part * iterations))
-    train_images = [i for i in range(iterations) if i not in test_images]
+    val_images = random.sample([i for i in range(iterations) if i not in test_images], int(val_part * iterations))
+    train_images = [i for i in range(iterations) if i not in test_images and i not in val_images]
 
     with open(TRAIN_PATH + 'train.txt', 'w') as train_f:
         for i in train_images:
@@ -189,6 +191,9 @@ def set_train_test(iterations, test_part=0.1):
     with open(TEST_PATH + 'test.txt', 'w') as test_f:
         for i in test_images:
             test_f.write('%05d' % i + '\n')
+    with open(VAL_PATH + 'val.txt', 'w') as val_f:
+	for i in val_images:
+	    val_f.write('%05d' % i + '\n')
 
 
 if __name__ == '__main__':

@@ -152,6 +152,7 @@ class TEST:
 
     def _test(self, image_name, thresh):
         """Detect object classes in an image using pre-computed object proposals."""
+	print(image_name)
 
         im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images', image_name)
         im = cv2.imread(im_file)
@@ -167,12 +168,17 @@ class TEST:
 
             loss = np.array([0, 0])
 
+	    img_path = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images')
+		
             with open(os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'ImageSets', '{}.txt'.format(end)), 'r') as f:
                 test_images = f.readlines()
                 print(len(test_images))
 
             for ind, im_name in enumerate(test_images):
-                loss += self._test(im_name[:-1] + '.jpg', thresh=thresh)
+		for ext in ['.jpg', '.png']:
+		    if os.path.exists(os.path.join(img_path, im_name[:-1] + ext)):
+			break
+                loss += self._test(im_name[:-1] + ext, thresh=thresh)
                 if ind % 20 == 0:
                     print('curr loss: ', loss)
                     print(len(test_images) - ind - 1, ' images left')
