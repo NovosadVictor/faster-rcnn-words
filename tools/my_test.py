@@ -28,42 +28,41 @@ CLASSES = ('__background__',
 NETS = {'vgg16': ('vgg16_faster_rcnn_iter_{}.ckpt',)}
 DATASETS= {'my_dataset': ('my_dataset_train', )}
 
+
 class TEST:
-    def __init__(self, iter, sess=None, net=None):
+    def __init__(self, iter, sess=None):
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
+        if sess is not None:
+            sess.close()
         # model path
-        if sess is None or net is None:
-            demonet = 'vgg16'
-            dataset = 'my_dataset'
-            tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default',
+        demonet = 'vgg16'
+        dataset = 'my_dataset'
+        tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default',
                                    NETS[demonet][0].format(iter))
-            print(tfmodel)
+        print(tfmodel)
 
-            if not os.path.isfile(tfmodel + '.meta'):
-                raise IOError(('{:s} not found.\nDid you download the proper networks from '
+        if not os.path.isfile(tfmodel + '.meta'):
+            raise IOError(('{:s} not found.\nDid you download the proper networks from '
                            'our server and place them properly?').format(tfmodel + '.meta'))
         # set config
-            tfconfig = tf.ConfigProto(allow_soft_placement=True)
-            tfconfig.gpu_options.allow_growth = True
+        tfconfig = tf.ConfigProto(allow_soft_placement=True)
+        tfconfig.gpu_options.allow_growth = True
 
         # init session
-            self._sess = tf.Session(config=tfconfig) if sess is None else sess
-            # load network
-            if demonet == 'vgg16':
-                self._net = vgg16()
-            else:
-                raise NotImplementedError
-            self._net.create_architecture("TEST", len(CLASSES),
-                                    tag='default', anchor_scales=[8, 16, 32], anchor_ratios=[0.5, 1, 2])
-
-            saver = tf.train.Saver()
-            saver.restore(self._sess, tfmodel)
-
-            print('Loaded network {:s}'.format(tfmodel))
+        self._sess = tf.Session(config=tfconfig)
+        # load network
+        if demonet == 'vgg16':
+            self._net = vgg16()
         else:
-            self._net = net
-            self._sess = sess
+            raise NotImplementedError
+        self._net.create_architecture("TEST", len(CLASSES),
+                                      tag='default', anchor_scales=cfg.ANCHOR_SCALES, anchor_ratios=cfg.ANCHOR_RATIOS)
+
+        saver = tf.train.Saver()
+        saver.restore(self._sess, tfmodel)
+
+        print('Loaded network {:s}'.format(tfmodel))
 
     def _bb_intersection_over_union(self, boxA, boxB):
         # determine the (x, y)-coordinates of the intersection rectangle
@@ -152,6 +151,7 @@ class TEST:
 
     def _test(self, image_name, thresh):
         """Detect object classes in an image using pre-computed object proposals."""
+	print(image_name)
 
         im_file = os.path.join(cfg.ROOT_DIR, 'text_img_dataset', 'data', 'Images', image_name)
         im = cv2.imread(im_file)
@@ -177,12 +177,16 @@ class TEST:
                 for ext in ['.jpg', '.png']:
                     if os.path.exists(os.path.join(img_path, im_name[:-1] + ext)):
                         break
+
                 loss += self._test(im_name[:-1] + ext, thresh=thresh)
                 if ind % 20 == 0:
                     print('curr loss: ', loss)
                     print(len(test_images) - ind - 1, ' images left')
 
             return loss / len(test_images)
+
+    def close(self):
+        self._sess.close()
 
 
 if __name__ == '__main__':
