@@ -324,7 +324,7 @@ class SolverWrapper(object):
           if len(np_paths) > cfg.TRAIN.SNAPSHOT_KEPT:
             self.remove_snapshot(np_paths, ss_paths)
 
-          test = TEST(iter, sess=sess)
+          test = TEST(iter)
 
           val_f.write(str(iter) + '\n')
 
@@ -340,25 +340,7 @@ class SolverWrapper(object):
 
           prev_loss = curr_loss
 
-          tfmodel = os.path.join('output', 'vgg16', 'my_dataset_train', 'default',
-                                 'vgg16_faster_rcnn_iter_{}.ckpt'.format(iter))
-
-          if not os.path.isfile(tfmodel + '.meta'):
-            raise IOError(('{:s} not found.\nDid you download the proper networks from '
-                           'our server and place them properly?').format(tfmodel + '.meta'))
-
-          tfconfig = tf.ConfigProto(allow_soft_placement=True)
-          tfconfig.gpu_options.allow_growth = True
-
-          sess = tf.Session(config=tfconfig)
-
-          saver = tf.train.Saver()
-          saver.restore(sess, tfmodel)
-
-          print('Loaded network {:s}'.format(tfmodel))
-
         iter += 1
-
 
     if last_snapshot_iter != iter - 1:
       self.snapshot(sess, iter - 1)

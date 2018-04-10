@@ -30,11 +30,9 @@ DATASETS= {'my_dataset': ('my_dataset_train', )}
 
 
 class TEST:
-    def __init__(self, iter, sess=None):
+    def __init__(self, iter):
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-        if sess is not None:
-            sess.close()
         # model path
         demonet = 'vgg16'
         dataset = 'my_dataset'
