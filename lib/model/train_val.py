@@ -272,7 +272,7 @@ class SolverWrapper(object):
     next_stepsize = stepsizes.pop()
     prev_loss = [0, 0]
 
-    with open(os.path.join(self.output_dir, 'val_errors.txt'), 'w') as val_f:
+    with open(os.path.join(self.output_dir, 'val_errors.txt'), 'a') as val_f:
       while iter < max_iters + 1:
         # Learning rate
         if iter == next_stepsize + 1:
@@ -329,13 +329,14 @@ class SolverWrapper(object):
           val_f.write(str(iter) + '\n')
 
           val = 0.7
-          while val < 0.97:
+          while val < 0.98:
             curr_loss = test.testing(end='val', thresh=val)  # !!!!!!!!!!!!!!!!!!!!!!!!
             val_f.write(str(curr_loss[0]) + ' ' + str(curr_loss[1]) + ' ' + str(val) + '\n')
-            val += 0.02
+            val += 0.03
 
           print('\n\ncurr_loss: ', curr_loss)
-          if abs(sum(curr_loss - prev_loss)) < 2 * 1e-3:
+          if abs(sum(curr_loss - prev_loss)) < 0.01 * sum(prev_loss):
+	    iter += 1
             break
 
           prev_loss = curr_loss
@@ -346,14 +347,14 @@ class SolverWrapper(object):
       self.snapshot(sess, iter - 1)
 
     with open(os.path.join(self.output_dir, 'test_error_{}.txt'.format(iter - 1)), 'w') as test_f:
-      test = TEST(iter - 1, sess, self.net)
+      test = TEST(iter - 1)
 
       test_tr = 0.7
       test_f.write(str(iter - 1) + '\n')
-      while test_tr < 0.97:
+      while test_tr < 0.98:
         test_error = test.testing(thresh=test_tr)  # !!!!!!!!!!!!!!!!!!!!!!!!
         test_f.write(str(test_error[0]) + ' ' + str(test_error[1]) + ' ' + str(test_tr) + '\n')
-        test_tr += 0.02
+        test_tr += 0.03
 
       print(test_error)
 

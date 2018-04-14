@@ -56,7 +56,7 @@ __C.TRAIN.ASPECT_GROUPING = False
 __C.TRAIN.SNAPSHOT_KEPT = 10
 
 # The time interval for saving tensorflow summaries
-__C.TRAIN.SUMMARY_INTERVAL = 500
+__C.TRAIN.SUMMARY_INTERVAL = 5000
 
 # Scale to use during training (can list multiple scales)
 # The scale is the pixel size of an image's shortest side
@@ -93,7 +93,7 @@ __C.TRAIN.BBOX_REG = True
 __C.TRAIN.BBOX_THRESH = 0.5
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 50
+__C.TRAIN.SNAPSHOT_ITERS = 2000
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel

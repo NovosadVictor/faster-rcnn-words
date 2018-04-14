@@ -43,7 +43,7 @@ case ${DATASET} in
     TRAIN_IMDB="my_dataset_train"
     TEST_IMDB="my_dataset_test"
     STEPSIZE="[3000]"
-    ITERS=30000
+    ITERS=60000
     ANCHORS="[8,16,32]"
     RATIOS="[0.5,1,2]"
     ;;
