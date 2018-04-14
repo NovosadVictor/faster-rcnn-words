@@ -194,7 +194,7 @@ if __name__ == '__main__':
         threshs = float(sys.argv[2])
 
     test = TEST(sys.argv[1])
-    with open(os.path.join(cfg.ROOT_DIR, 'real_results', '{}_results.txt'.format(sys.argv[3])), 'w') as f_o:
+    with open(os.path.join(cfg.ROOT_DIR, 'real_results', '{}_results_{}.txt'.format(sys.argv[3], sys.argv[1])), 'w') as f_o:
 	f_o.write(sys.argv[1] + '\n')
         for thresh in threshs:
             error = test.testing(end=sys.argv[3], thresh=thresh)
