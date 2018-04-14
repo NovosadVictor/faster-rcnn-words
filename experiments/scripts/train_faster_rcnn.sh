@@ -44,8 +44,8 @@ case ${DATASET} in
     TEST_IMDB="my_dataset_test"
     STEPSIZE="[3000]"
     ITERS=60000
-    ANCHORS="[8,16,32]"
-    RATIOS="[0.5,1,2]"
+    ANCHORS="[4,8,16,32]"
+    RATIOS="[0.15,0.3,0.5,0.7]"
     ;;
   *)
     echo "No dataset given"

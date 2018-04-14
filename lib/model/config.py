@@ -278,10 +278,10 @@ __C.POOLING_MODE = 'crop'
 __C.POOLING_SIZE = 7
 
 # Anchor scales for RPN
-__C.ANCHOR_SCALES = [8, 16, 32] # 4 8 16 32
-# ORIGINAL IS [16, 32, 48]
+__C.ANCHOR_SCALES = [4, 8, 16, 32]
+# ORIGINAL IS [16, 32, 48]; [0.5, 1, 2]
 # Anchor ratios for RPN
-__C.ANCHOR_RATIOS = [0.5, 1, 2] # 0.15 0.3 0.5 0.7
+__C.ANCHOR_RATIOS = [0.15, 0.3, 0.5, 0.7]  # 0.15 0.3 0.5 0.7
 
 # Number of filters for the RPN layer
 __C.RPN_CHANNELS = 512
