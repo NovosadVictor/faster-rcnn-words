@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+import sys
 
 def create_plots(filename):
     with open(filename, 'r') as f:
@@ -39,4 +39,4 @@ def create_plots(filename):
 
 
 if __name__ == '__main__':
-    create_plots(filename='real_results/real_results.txt')
+    create_plots(filename='real_results/{}.txt'.format(sys.argv[1]))

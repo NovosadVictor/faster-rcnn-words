@@ -335,7 +335,7 @@ class SolverWrapper(object):
             val += 0.02
 
           print('\n\ncurr_loss: ', curr_loss)
-          if abs(sum(curr_loss - prev_loss)) < 2 * 1e-3:
+          if abs(sum(curr_loss - prev_loss)) < 1e-2:
             break
 
           prev_loss = curr_loss
