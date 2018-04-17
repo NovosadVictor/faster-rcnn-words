@@ -189,7 +189,7 @@ class TEST:
 
 if __name__ == '__main__':
     if sys.argv[2] == 'all':
-        threshs = [0.7 + 0.02 * i for i in range(12)]
+        threshs = [0.7 + 0.03 * i for i in range(10)]
     else:
         threshs = float(sys.argv[2])
 
